@@ -82,7 +82,7 @@
   #(select-keys % [:id :frame :name :type :hidden :blocked]))
 
 (mf/defc layer-item
-  {:wrap [mf/wrap-memo]}
+  {:wrap [mf/memo]}
   [{:keys [index item selected objects] :as props}]
   (let [selected? (contains? selected (:id item))
         local (mf/use-state {:collapsed false})
@@ -186,7 +186,7 @@
               :key (:id item)}]))])]))
 
 (mf/defc layer-frame-item
-  {:wrap [#(mf/wrap-memo % =)]}
+  {:wrap [#(mf/memo % =)]}
   [{:keys [item selected index objects] :as props}]
   (let [selected? (contains? selected (:id item))
         local (mf/use-state {:collapsed false})
@@ -286,7 +286,7 @@
               :key (:id item)}]))])]))
 
 (mf/defc layers-tree
-  {::mf/wrap [mf/wrap-memo]}
+  {::mf/wrap [mf/memo]}
   [props]
   (let [selected (mf/deref refs/selected-shapes)
         data (mf/deref refs/workspace-data)
@@ -314,7 +314,7 @@
 ;; only render visible items instead of all.
 
 (mf/defc layers-toolbox
-  {:wrap [mf/wrap-memo]}
+  {:wrap [mf/memo]}
   [{:keys [page] :as props}]
   (let [locale (i18n/use-locale)
         on-click #(st/emit! (dw/toggle-layout-flag :layers))]
