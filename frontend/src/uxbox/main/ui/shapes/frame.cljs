@@ -57,39 +57,39 @@
   (mf/fnc frame-wrapper
     {::mf/wrap [wrap-memo-frame]}
     [{:keys [shape objects] :as props}]
-    (when (and shape (not (:hidden shape)))
-      (let [selected-iref (-> (mf/deps (:id shape))
-                              (mf/use-memo #(refs/make-selected (:id shape))))
-            selected? (mf/deref selected-iref)
-            on-mouse-down #(common/on-mouse-down % shape)
-            on-context-menu #(common/on-context-menu % shape)
-            shape (merge frame-default-props shape)
-            {:keys [x y width height]} shape
+    (let [selected-iref (-> (mf/deps (:id shape))
+                            (mf/use-memo #(refs/make-selected (:id shape))))
+          selected? (mf/deref selected-iref)]
+      (when (and shape (not (:hidden shape)))
+        (let [on-mouse-down #(common/on-mouse-down % shape)
+              on-context-menu #(common/on-context-menu % shape)
+              shape (merge frame-default-props shape)
+              {:keys [x y width height]} shape
 
-            childs (mapv #(get objects %) (:shapes shape))
+              childs (mapv #(get objects %) (:shapes shape))
 
-            ds-modifier (:displacement-modifier shape)
-            label-pos (cond-> (gpt/point x (- y 10))
-                        (gmt/matrix? ds-modifier) (gpt/transform ds-modifier))
+              ds-modifier (:displacement-modifier shape)
+              label-pos (cond-> (gpt/point x (- y 10))
+                          (gmt/matrix? ds-modifier) (gpt/transform ds-modifier))
 
-            on-double-click
-            (fn [event]
-              (dom/prevent-default event)
-              (st/emit! dw/deselect-all
-                        (dw/select-shape (:id shape))))]
-        [:g {:class (when selected? "selected")
-             :on-context-menu on-context-menu
-             :on-double-click on-double-click
-             :on-mouse-down on-mouse-down}
-         [:text {:x (:x label-pos)
-                 :y (:y label-pos)
-                 :width width
-                 :height 20
-                 :class-name "workspace-frame-label"
-                 :on-click on-double-click} ; user may also select with single click in the label
-          (:name shape)]
-         [:& (frame-shape shape-wrapper) {:shape shape
-                                          :childs childs}]]))))
+              on-double-click
+              (fn [event]
+                (dom/prevent-default event)
+                (st/emit! dw/deselect-all
+                          (dw/select-shape (:id shape))))]
+          [:g {:class (when selected? "selected")
+               :on-context-menu on-context-menu
+               :on-double-click on-double-click
+               :on-mouse-down on-mouse-down}
+           [:text {:x (:x label-pos)
+                   :y (:y label-pos)
+                   :width width
+                   :height 20
+                   :class-name "workspace-frame-label"
+                   :on-click on-double-click} ; user may also select with single click in the label
+            (:name shape)]
+           [:& (frame-shape shape-wrapper) {:shape shape
+                                            :childs childs}]])))))
 
 (defn frame-shape [shape-wrapper]
  (mf/fnc frame-shape
@@ -97,7 +97,6 @@
    (let [rotation    (:rotation shape)
          ds-modifier (:displacement-modifier shape)
          rz-modifier (:resize-modifier shape)
-
          shape (cond-> shape
                  (gmt/matrix? rz-modifier) (geom/transform rz-modifier)
                  (gmt/matrix? ds-modifier) (geom/transform ds-modifier))
@@ -115,21 +114,5 @@
      [:svg {:x x :y y :width width :height height}
       [:> "rect" props]
       (for [item childs]
-        [:& shape-wrapper {:shape (translate-to-frame item shape) :key (:id item)}])])))
+        [:& shape-wrapper {:shape item :key (:id item)}])])))
 
-(defn- translate-to-frame
-  [shape frame]
-  (let [pt (gpt/point (- (:x frame)) (- (:y frame)))
-        frame-ds-modifier (:displacement-modifier frame)
-        rz-modifier (:resize-modifier shape)
-        shape (cond-> shape
-                (gmt/matrix? frame-ds-modifier)
-                (geom/transform frame-ds-modifier)
-
-                (and (= (:type shape) :group) (gmt/matrix? rz-modifier))
-                (geom/transform rz-modifier)
-
-                (and (not= (:type shape) :group) (gmt/matrix? rz-modifier))
-                (-> (geom/transform rz-modifier)
-                    (dissoc :resize-modifier)))]
-    (geom/move shape pt)))

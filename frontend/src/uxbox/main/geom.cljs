@@ -657,3 +657,11 @@
          (> rx2 sx1)
          (< ry1 sy2)
          (> ry2 sy1))))
+
+(defn transform-shape [frame shape]
+  (let [ds-modifier (:displacement-modifier shape)
+        rz-modifier (:resize-modifier shape)]
+    (cond-> shape
+      (gmt/matrix? rz-modifier) (transform rz-modifier)
+      frame (move (gpt/point (- (:x frame)) (- (:y frame))))
+      (gmt/matrix? ds-modifier) (transform ds-modifier))))
