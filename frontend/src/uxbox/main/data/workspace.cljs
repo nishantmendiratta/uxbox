@@ -1951,7 +1951,7 @@
     (watch [_ state stream]
       (let [project-id (get-in state [:workspace-project :id])
             file-id (get-in state [:workspace-page :file-id])
-            path-params {:file-id file-id}
+            path-params {:file-id file-id :project-id project-id}
             query-params {:page-id page-id}]
         (rx/of (rt/nav :workspace path-params query-params))))))
 
